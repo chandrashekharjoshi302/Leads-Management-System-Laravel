@@ -77,12 +77,26 @@ class LeadController extends Controller
     public function update(Request $request, $id)
     {
         $lead = Lead::findOrFail($id);
-        $this->authorizeLead($lead);
 
-        $lead->update($request->all());
+        $data = $request->validate([
+            'name' => 'required|string',
+            'email' => 'nullable|email',
+            'phone' => 'nullable|string',
+            'lead_source' => 'nullable|string',
+            'status' => 'required|string',
+            'remarks' => 'nullable|string',
+        ]);
+
+        // Only admins can update assigned_to
+        if (auth()->user()->role === 'admin') {
+            $data['assigned_to'] = $request->input('assigned_to');
+        }
+
+        $lead->update($data);
 
         return redirect()->route('leads.index')->with('success', 'Lead updated successfully.');
     }
+
 
     public function destroy($id)
     {
